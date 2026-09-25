@@ -38,11 +38,14 @@
     }
     h2 {
       font-size: 15px;
-      color: var(--primary);
       margin-top: 20px;
-      border-left: 4px solid var(--primary);
       padding-left: 8px;
+      border-left: 4px solid;
     }
+    .guild-my h2 { color: #1d4ed8; border-color: #2563eb; }
+    .guild-enemy h2 { color: #b91c1c; border-color: #ef4444; }
+    .guild-output h2 { color: #047857; border-color: #059669; }
+
     .form-group { margin-bottom: 12px; }
     .form-label-sub {
       display: block;
@@ -62,7 +65,6 @@
       background-color: #fff;
     }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
     
     button {
       border: none;
@@ -76,17 +78,21 @@
     .btn-main { background-color: var(--primary); color: white; width: 100%; }
     .btn-main:hover { background-color: var(--primary-dark); }
     .btn-sub { background-color: #64748b; color: white; }
-    .btn-analyze { background-color: #059669; color: white; width: 100%; font-size: 16px; padding: 14px; margin-top: 16px; }
-    .btn-analyze:hover { background-color: #047857; }
-    .btn-del { background-color: #ef4444; color: white; padding: 4px 8px; font-size: 12px; border-radius: 4px; }
+    .btn-edit { background-color: #3b82f6; color: white; padding: 4px 8px; font-size: 11px; border-radius: 4px; margin-right: 4px; }
+    .btn-del { background-color: #ef4444; color: white; padding: 4px 8px; font-size: 11px; border-radius: 4px; }
+    .btn-copy { background-color: #2563eb; color: white; width: 100%; font-size: 14px; padding: 10px; margin-top: 8px; }
+    .btn-copy:hover { background-color: #1d4ed8; }
     
     .card {
-      background: #f1f5f9;
-      border: 1px solid var(--border-color);
       border-radius: 8px;
-      padding: 12px;
+      padding: 14px;
       margin-bottom: 12px;
+      border: 1px solid;
     }
+    .card-my { background: #eff6ff; border-color: #bfdbfe; }
+    .card-enemy { background: #fef2f2; border-color: #fecaca; }
+    .card-output { background: #ecfdf5; border-color: #a7f3d0; }
+
     .member-list {
       max-height: 250px;
       overflow-y: auto;
@@ -123,10 +129,10 @@
       white-space: nowrap;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
     .enemy-tab.active {
-      background: var(--primary);
+      background: #dc2626;
       color: white;
     }
     .enemy-tab .tab-del {
@@ -140,6 +146,25 @@
       justify-content: center;
     }
 
+    .match-toggle-box {
+      background: #fff;
+      border: 1px solid #fecaca;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: bold;
+      color: #b91c1c;
+    }
+    .match-toggle-box input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
     .loading {
       display: none;
       color: var(--primary);
@@ -148,7 +173,7 @@
       text-align: center;
     }
     .result-box {
-      height: 300px;
+      height: 240px;
       font-family: monospace;
       margin-top: 10px;
       white-space: pre-wrap;
@@ -159,6 +184,25 @@
       font-family: monospace;
       resize: vertical;
     }
+    .logic-explanation {
+      background: #ffffff;
+      border: 1px solid #a7f3d0;
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: #065f46;
+      line-height: 1.5;
+    }
+    .logic-explanation h4 {
+      margin: 0 0 6px 0;
+      font-size: 13px;
+      color: #047857;
+    }
+    .logic-explanation ul {
+      margin: 0;
+      padding-left: 18px;
+    }
   </style>
 </head>
 <body>
@@ -167,201 +211,219 @@
   <h1>【麗華の野望】ギルド戦マッチング＆疲労度分析</h1>
 
   <!-- API Key設定 -->
-  <div class="form-group">
-    <label for="apiKey">Gemini API Key</label>
+  <div class="form-group" style="margin-top: 12px;">
+    <label for="apiKey">Gemini API Key（画像解析用）</label>
     <input type="password" id="apiKey" placeholder="APIキーを入力（自動保存されます）">
   </div>
 
-  <!-- STEP 1: 自ギルドの情報入力 -->
-  <h2>STEP 1：自ギルドの情報入力</h2>
-  <div class="card">
-    <div class="form-group">
-      <label>一括写真読み取り（最大10枚）</label>
-      <input type="file" id="myImageInput" accept="image/*" multiple onchange="handleFileSelect(event, 'myPreviewCount')">
-      <div id="myPreviewCount" style="font-size: 12px; color: #64748b; margin-top: 4px;"></div>
-      <button class="btn-main" style="margin-top: 8px;" onclick="analyzeMultipleImages('my')">画像を一括解析して登録</button>
-      <div class="loading" id="myLoading">自ギルド画像をAI解析中...</div>
+  <!-- STEP 1: 味方ギルドの情報入力 (青系) -->
+  <div class="guild-my">
+    <h2>STEP 1：味方ギルドの情報入力</h2>
+    <div class="card card-my">
+      
+      <label style="color:var(--primary); margin-bottom:8px;">手動で1名ずつ追加（編集時はここから再登録）</label>
+      <input type="hidden" id="myEditId" value="">
+      <div class="grid-2">
+        <div class="form-group">
+          <span class="form-label-sub">プレーヤー名</span>
+          <input type="text" id="myManualName" placeholder="例: 織田信長">
+        </div>
+        <div class="form-group">
+          <span class="form-label-sub">メイン部隊総戦力 (万)</span>
+          <input type="text" id="myManualMainPower" placeholder="例: 500">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <span class="form-label-sub">メインキャラ1 属性</span>
+          <select id="myManualElement1">
+            <option value="光">光</option>
+            <option value="闇">闇</option>
+            <option value="地">地</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <span class="form-label-sub">メインキャラ1 戦力 (万)</span>
+          <input type="text" id="myManualCharPower1" placeholder="例: 270">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <span class="form-label-sub">メインキャラ2 属性 (任意)</span>
+          <select id="myManualElement2">
+            <option value="">なし</option>
+            <option value="光">光</option>
+            <option value="闇">闇</option>
+            <option value="地">地</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <span class="form-label-sub">メインキャラ2 戦力 (万)</span>
+          <input type="text" id="myManualCharPower2" placeholder="例: 200">
+        </div>
+      </div>
+      <button class="btn-main" id="mySubmitBtn" onclick="saveManualMember('my')">味方メンバーを追加する</button>
+
+      <hr style="border:0; border-top:1px solid #bfdbfe; margin:14px 0;">
+
+      <div class="form-group">
+        <label style="color:var(--primary);">メモから一括登録（最大20名）</label>
+        <span class="form-label-sub">書式: プレーヤー名,総戦力(万),キャラ1属性,キャラ1戦力(万)[,キャラ2属性,キャラ2戦力(万)]</span>
+        <textarea id="myMemoInput" class="memo-textarea" placeholder="つむ,1500万,光,1000万&#10;織田信長,500万,光,270万,闇,200万"></textarea>
+        <button class="btn-sub" style="width:100%; margin-top:4px;" onclick="addMembersFromMemo('my')">メモから一括登録</button>
+      </div>
+
+      <hr style="border:0; border-top:1px solid #bfdbfe; margin:14px 0;">
+
+      <div class="form-group" style="margin-bottom:0;">
+        <label style="color:var(--primary);">一括写真読み取り（最大10枚）</label>
+        <input type="file" id="myImageInput" accept="image/*" multiple onchange="handleFileSelect(event, 'myPreviewCount')">
+        <div id="myPreviewCount" style="font-size: 12px; color: #475569; margin-top: 4px;"></div>
+        <button class="btn-sub" style="width:100%; margin-top:8px;" onclick="analyzeMultipleImages('my')">画像を一括解析して登録</button>
+        <div class="loading" id="myLoading">味方ギルド画像をAI解析中...</div>
+      </div>
+
     </div>
 
-    <hr style="border:0; border-top:1px solid #cbd5e1; margin:12px 0;">
-
-    <!-- メモ一括登録機能 (自ギルド) -->
-    <div class="form-group">
-      <label style="color:var(--primary);">メモから一括登録（最大20名・Wメインキャラ対応）</label>
-      <span class="form-label-sub">書式: プレーヤー名,メイン部隊総戦力(万),キャラ1属性,キャラ1戦力(万)[,キャラ2属性,キャラ2戦力(万)]</span>
-      <textarea id="myMemoInput" class="memo-textarea" placeholder="織田信長,500万,光,270万,闇,200万&#10;豊臣秀吉,320万,闇,240万"></textarea>
-      <button class="btn-sub" style="width:100%; margin-top:4px;" onclick="addMembersFromMemo('my')">メモから一括登録</button>
+    <div>
+      <label>味方ギルド 登録メンバー (<span id="myCount">0</span>名)</label>
+      <div class="member-list" id="myList"></div>
     </div>
+  </div>
 
-    <hr style="border:0; border-top:1px solid #cbd5e1; margin:12px 0;">
 
-    <label style="color:var(--primary); margin-bottom:8px;">手動入力で1名ずつ追加（万単位）</label>
+  <!-- STEP 2: 敵ギルドの情報入力 (赤系) -->
+  <div class="guild-enemy">
+    <h2>STEP 2：敵ギルドの情報入力</h2>
     
-    <!-- 手動入力項目 -->
-    <div class="grid-2">
-      <div class="form-group">
-        <span class="form-label-sub">プレーヤー名</span>
-        <input type="text" id="myManualName" placeholder="例: 織田信長">
-      </div>
-      <div class="form-group">
-        <span class="form-label-sub">メイン部隊総戦力 (万)</span>
-        <input type="text" id="myManualMainPower" placeholder="例: 500（500万の場合）">
+    <div class="card card-enemy" style="border: 1px dashed #ef4444; background:#fff5f5;">
+      <label style="color:#b91c1c;">対戦する敵ギルドの追加</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="newEnemyGuildName" placeholder="敵ギルド名を入力（例: 龍鳳閣）">
+        <button class="btn-sub" style="width:130px; white-space:nowrap; background:#dc2626;" onclick="addNewEnemyGuild()">ギルドを追加</button>
       </div>
     </div>
 
-    <!-- メインキャラ 1 -->
-    <div class="grid-2">
-      <div class="form-group">
-        <span class="form-label-sub">メインキャラ1 属性</span>
-        <select id="myManualElement1">
-          <option value="光">光</option>
-          <option value="闇">闇</option>
-          <option value="地">地</option>
-        </select>
+    <label>登録済みの敵ギルド一覧（タブ選択）</label>
+    <div class="enemy-tabs" id="enemyTabsContainer"></div>
+
+    <div id="enemySection" style="display: none;">
+      
+      <div class="match-toggle-box">
+        <span>⚔️ 本日この敵ギルドと戦う（分析対象にする）</span>
+        <input type="checkbox" id="todayMatchToggle" onchange="toggleTodayMatch()">
       </div>
-      <div class="form-group">
-        <span class="form-label-sub">メインキャラ1 戦力 (万)</span>
-        <input type="text" id="myManualCharPower1" placeholder="例: 270">
+
+      <div class="card card-enemy">
+        
+        <label style="color:#b91c1c; margin-bottom:8px;">【敵ギルド：<span class="currentEnemyLabel">--</span>】手動で1名ずつ追加（編集時はここから再登録）</label>
+        <input type="hidden" id="enemyEditId" value="">
+        <div class="grid-2">
+          <div class="form-group">
+            <span class="form-label-sub">プレーヤー名</span>
+            <input type="text" id="enemyManualName" placeholder="例: 明智光秀">
+          </div>
+          <div class="form-group">
+            <span class="form-label-sub">メイン部隊総戦力 (万)</span>
+            <input type="text" id="enemyManualMainPower" placeholder="例: 320">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <span class="form-label-sub">メインキャラ1 属性</span>
+            <select id="enemyManualElement1">
+              <option value="光">光</option>
+              <option value="闇">闇</option>
+              <option value="地">地</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <span class="form-label-sub">メインキャラ1 戦力 (万)</span>
+            <input type="text" id="enemyManualCharPower1" placeholder="例: 240">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <span class="form-label-sub">メインキャラ2 属性 (任意)</span>
+            <select id="enemyManualElement2">
+              <option value="">なし</option>
+              <option value="光">光</option>
+              <option value="闇">闇</option>
+              <option value="地">地</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <span class="form-label-sub">メインキャラ2 戦力 (万)</span>
+            <input type="text" id="enemyManualCharPower2" placeholder="例: 200">
+          </div>
+        </div>
+        <button class="btn-main" id="enemySubmitBtn" style="background-color: #dc2626;" onclick="saveManualMember('enemy')">敵メンバーを追加する</button>
+
+        <hr style="border:0; border-top:1px solid #fecaca; margin:14px 0;">
+
+        <div class="form-group">
+          <label style="color:#b91c1c;">【敵ギルド：<span class="currentEnemyLabel">--</span>】メモから一括登録（最大20名）</label>
+          <span class="form-label-sub">書式: プレーヤー名,総戦力(万),キャラ1属性,キャラ1戦力(万)[,キャラ2属性,キャラ2戦力(万)]</span>
+          <textarea id="enemyMemoInput" class="memo-textarea" placeholder="ぽるんが,2000万,光,1500万&#10;明智光秀,320万,闇,240万"></textarea>
+          <button class="btn-sub" style="width:100%; margin-top:4px; background:#dc2626;" onclick="addMembersFromMemo('enemy')">メモから一括登録</button>
+        </div>
+
+        <hr style="border:0; border-top:1px solid #fecaca; margin:14px 0;">
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="color:#b91c1c;">【敵ギルド：<span class="currentEnemyLabel">--</span>】一括写真読み取り（最大10枚）</label>
+          <input type="file" id="enemyImageInput" accept="image/*" multiple onchange="handleFileSelect(event, 'enemyPreviewCount')">
+          <div id="enemyPreviewCount" style="font-size: 12px; color: #7f1d1d; margin-top: 4px;"></div>
+          <button class="btn-sub" style="width:100%; margin-top:8px; background:#dc2626;" onclick="analyzeMultipleImages('enemy')">画像を一括解析して登録</button>
+          <div class="loading" id="enemyLoading">敵ギルド画像をAI解析中...</div>
+        </div>
+
       </div>
-    </div>
 
-    <!-- メインキャラ 2 (任意) -->
-    <div class="grid-2">
-      <div class="form-group">
-        <span class="form-label-sub">メインキャラ2 属性 (任意)</span>
-        <select id="myManualElement2">
-          <option value="">なし</option>
-          <option value="光">光</option>
-          <option value="闇">闇</option>
-          <option value="地">地</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <span class="form-label-sub">メインキャラ2 戦力 (万)</span>
-        <input type="text" id="myManualCharPower2" placeholder="例: 200（いない場合は空欄）">
-      </div>
-    </div>
-
-    <button class="btn-sub" style="width:100%; margin-top:4px;" onclick="addManualMember('my')">手動で自ギルドに追加</button>
-  </div>
-
-  <div>
-    <label>自ギルド 登録メンバー (<span id="myCount">0</span>名)</label>
-    <div class="member-list" id="myList"></div>
-  </div>
-
-
-  <!-- STEP 2: 敵ギルドの情報入力 -->
-  <h2>STEP 2：敵ギルドの情報入力</h2>
-  
-  <div class="card" style="background:#fff; border: 1px dashed var(--primary);">
-    <label style="color:var(--primary);">新規敵ギルドの作成・追加</label>
-    <div style="display:flex; gap:8px;">
-      <input type="text" id="newEnemyGuildName" placeholder="対戦敵ギルド名を入力（例: 龍鳳閣）">
-      <button class="btn-sub" style="width:120px; white-space:nowrap;" onclick="addNewEnemyGuild()">ギルド追加</button>
-    </div>
-  </div>
-
-  <label>対戦敵ギルド一覧（タブ選択）</label>
-  <div class="enemy-tabs" id="enemyTabsContainer"></div>
-
-  <div class="card">
-    <div class="form-group">
-      <label>【敵ギルド：<span class="currentEnemyLabel">--</span>】一括写真読み取り（最大10枚）</label>
-      <input type="file" id="enemyImageInput" accept="image/*" multiple onchange="handleFileSelect(event, 'enemyPreviewCount')">
-      <div id="enemyPreviewCount" style="font-size: 12px; color: #64748b; margin-top: 4px;"></div>
-      <button class="btn-main" style="margin-top: 8px;" onclick="analyzeMultipleImages('enemy')">画像を一括解析して登録</button>
-      <div class="loading" id="enemyLoading">敵ギルド画像をAI解析中...</div>
-    </div>
-
-    <hr style="border:0; border-top:1px solid #cbd5e1; margin:12px 0;">
-
-    <!-- メモ一括登録機能 (敵ギルド) -->
-    <div class="form-group">
-      <label style="color:var(--primary);">【敵ギルド：<span class="currentEnemyLabel">--</span>】メモから一括登録（最大20名・Wメインキャラ対応）</label>
-      <span class="form-label-sub">書式: プレーヤー名,メイン部隊総戦力(万),キャラ1属性,キャラ1戦力(万)[,キャラ2属性,キャラ2戦力(万)]</span>
-      <textarea id="enemyMemoInput" class="memo-textarea" placeholder="明智光秀,320万,闇,240万&#10;武田信玄,520万,地,290万,光,210万"></textarea>
-      <button class="btn-sub" style="width:100%; margin-top:4px;" onclick="addMembersFromMemo('enemy')">メモから一括登録</button>
-    </div>
-
-    <hr style="border:0; border-top:1px solid #cbd5e1; margin:12px 0;">
-
-    <label style="color:var(--primary); margin-bottom:8px;">手動入力で1名ずつ追加（万単位）</label>
-
-    <div class="grid-2">
-      <div class="form-group">
-        <span class="form-label-sub">プレーヤー名</span>
-        <input type="text" id="enemyManualName" placeholder="例: 明智光秀">
-      </div>
-      <div class="form-group">
-        <span class="form-label-sub">メイン部隊総戦力 (万)</span>
-        <input type="text" id="enemyManualMainPower" placeholder="例: 320">
+      <div>
+        <label>【敵ギルド：<span class="currentEnemyLabel">--</span>】登録メンバー (<span id="enemyCount">0</span>名)</label>
+        <div class="member-list" id="enemyList"></div>
       </div>
     </div>
-
-    <div class="grid-2">
-      <div class="form-group">
-        <span class="form-label-sub">メインキャラ1 属性</span>
-        <select id="enemyManualElement1">
-          <option value="光">光</option>
-          <option value="闇">闇</option>
-          <option value="地">地</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <span class="form-label-sub">メインキャラ1 戦力 (万)</span>
-        <input type="text" id="enemyManualCharPower1" placeholder="例: 240">
-      </div>
-    </div>
-
-    <div class="grid-2">
-      <div class="form-group">
-        <span class="form-label-sub">メインキャラ2 属性 (任意)</span>
-        <select id="enemyManualElement2">
-          <option value="">なし</option>
-          <option value="光">光</option>
-          <option value="闇">闇</option>
-          <option value="地">地</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <span class="form-label-sub">メインキャラ2 戦力 (万)</span>
-        <input type="text" id="enemyManualCharPower2" placeholder="例: 200（いない場合は空欄）">
-      </div>
-    </div>
-
-    <button class="btn-sub" style="width:100%; margin-top:4px;" onclick="addManualMember('enemy')">手動で敵ギルドに追加</button>
-  </div>
-
-  <div>
-    <label>【敵ギルド：<span class="currentEnemyLabel">--</span>】登録メンバー (<span id="enemyCount">0</span>名)</label>
-    <div class="member-list" id="enemyList"></div>
   </div>
 
 
-  <!-- STEP 3: 対戦分析 ＆ 結果出力 -->
-  <h2>STEP 3：分析 ＆ マッチング結果出力</h2>
-  <button class="btn-analyze" onclick="runAnalysis()">敵ギルドへの部隊割り振り分析を実行</button>
+  <!-- STEP 3: 対戦分析 ＆ 結果出力 (緑系) -->
+  <div class="guild-output">
+    <h2>STEP 3：分析 ＆ マッチング結果出力</h2>
+    <div class="card card-output">
+      <button class="btn-analyze" onclick="runAnalysis()">敵ギルドへの部隊割り振り分析を実行</button>
 
-  <div class="form-group" style="margin-top: 16px;">
-    <label for="noticeOutput">分析結果（アウトプット）</label>
-    <textarea id="noticeOutput" class="result-box" readonly placeholder="「分析を実行」を押すとここに結果が出力されます"></textarea>
+      <div class="form-group" style="margin-top: 16px; margin-bottom: 0;">
+        <label for="noticeOutput" style="color: #047857;">分析結果（チャットコピー用）</label>
+        <textarea id="noticeOutput" class="result-box" readonly placeholder="「分析を実行」を押すとここに結果が出力されます"></textarea>
+        <button class="btn-copy" onclick="copyOutputText()">分析結果をコピーする</button>
+      </div>
+
+      <div class="logic-explanation">
+        <h4>💡 マッチング・分析ロジックの仕組み</h4>
+        <ul>
+          <li><strong>属性相性 (三すくみ)</strong>: 光 ＞ 闇 ＞ 地 ＞ 光。有利属性のキャラは戦力が約1.33倍（25%軽減相当）に換算されます。</li>
+          <li><strong>キャリー判定 (70%ルール)</strong>: 主力キャラの合計が部隊総戦力の70%超なら主力基準、以下なら総戦力をベースに評価します。</li>
+          <li><strong>0%（削り不要）</strong>: 味方の実効戦力が敵の評価戦力を上回る場合、無駄な戦力差が最も小さい最適部隊を割り当てます。</li>
+          <li><strong>疲労度 % 計算</strong>: 味方の戦力が敵に届かない場合、本命部隊を当てるために必要な不足戦力を算出し、1回あたり1.25%の蓄積疲労度を<strong>切り上げの整数</strong>で表示します。</li>
+        </ul>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-  // データ状態の保持
-  const myGuildMembers = [];
-  
-  const enemyGuilds = {
-    '敵A': [],
-    '敵B': [],
-    '敵C': [],
-    '敵D': []
-  };
-  let currentEnemyGuildName = '敵A';
+  let myGuildMembers = JSON.parse(localStorage.getItem('paranoise_my_members')) || [];
+  let enemyGuildsData = JSON.parse(localStorage.getItem('paranoise_enemy_guilds_v2')) || {};
+  let currentEnemyGuildName = localStorage.getItem('paranoise_current_enemy_v2') || "";
 
-  // 属性変換関数 (緑→地, 黄→光, 紫→闇)
+  function saveData() {
+    localStorage.setItem('paranoise_my_members', JSON.stringify(myGuildMembers));
+    localStorage.setItem('paranoise_enemy_guilds_v2', JSON.stringify(enemyGuildsData));
+    localStorage.setItem('paranoise_current_enemy_v2', currentEnemyGuildName);
+  }
+
   function normalizeElement(elem) {
     if (!elem) return "";
     if (elem.includes("緑")) return "地";
@@ -371,10 +433,8 @@
     return "光";
   }
 
-  // 入力された戦力を「絶対値（実際の数値）」に正規化
   function parsePowerInput(val) {
     if (!val) return 0;
-    
     let str = val.toString()
       .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
       .replace(/,/g, '')
@@ -382,105 +442,134 @@
 
     if (str.includes('万')) {
       const numVal = parseFloat(str.replace('万', ''));
-      return isNaN(numVal) ? 0 : numVal * 10000;
+      return isNaN(numVal) ? 0 : Math.round(numVal) * 10000;
     }
       
     const num = parseFloat(str);
     if (isNaN(num) || num <= 0) return 0;
 
-    if (num < 100) return num * 1000000; // 小数点表記（例: 3.5 → 350万）
-    if (num < 10000) return num * 10000; // 万単位表記（例: 350 → 350万）
-    return num;
+    if (num < 100) return Math.round(num * 100) * 10000; // 例: 3.5万 や 3.5（350万）
+    if (num < 10000) return Math.round(num) * 10000;     // 例: 350 → 350万
+    return Math.round(num);
   }
 
-  // 「万」単位のみの表記フォーマット（カッコ内の最小単位を非表示化）
+  // 戦力フォーマット（四捨五入して整数万で表記）
   function formatPower(num) {
     if (!num || num <= 0) return "0万";
-    const tenThousandVal = (num / 10000).toFixed(2).replace(/\.?0+$/, '');
+    const tenThousandVal = Math.round(num / 10000);
     return `${tenThousandVal}万`;
   }
 
-  // 初期化
   window.addEventListener('DOMContentLoaded', () => {
     const savedKey = localStorage.getItem('gemini_api_key');
     if (savedKey) {
       document.getElementById('apiKey').value = savedKey;
     }
+    const keys = Object.keys(enemyGuildsData);
+    if (keys.length > 0 && (!currentEnemyGuildName || !enemyGuildsData[currentEnemyGuildName])) {
+      currentEnemyGuildName = keys[0];
+    }
     renderTabs();
     renderMembers();
   });
 
-  // 敵ギルド追加処理
   function addNewEnemyGuild() {
     const nameInput = document.getElementById('newEnemyGuildName');
     const guildName = nameInput.value.trim();
 
     if (!guildName) return alert('敵ギルド名を入力してください。');
-    if (enemyGuilds[guildName]) return alert('そのギルド名は既に存在します。');
+    if (enemyGuildsData[guildName]) return alert('そのギルド名は既に存在します。');
 
-    enemyGuilds[guildName] = [];
+    enemyGuildsData[guildName] = {
+      todayMatch: true,
+      members: []
+    };
     currentEnemyGuildName = guildName;
     nameInput.value = '';
 
+    saveData();
     renderTabs();
     renderMembers();
   }
 
-  // 敵ギルド削除処理
   function removeEnemyGuild(guildName, event) {
     event.stopPropagation();
     
-    const keys = Object.keys(enemyGuilds);
-    if (keys.length <= 1) return alert('最低1つの敵ギルドは残す必要があります。');
-
     if (confirm(`敵ギルド「${guildName}」を削除しますか？`)) {
-      delete enemyGuilds[guildName];
-      if (currentEnemyGuildName === guildName) {
-        currentEnemyGuildName = Object.keys(enemyGuilds)[0];
-      }
+      delete enemyGuildsData[guildName];
+      const keys = Object.keys(enemyGuildsData);
+      currentEnemyGuildName = keys.length > 0 ? keys[0] : "";
+      saveData();
       renderTabs();
       renderMembers();
     }
   }
 
-  // タブ描画
+  function toggleTodayMatch() {
+    if (!currentEnemyGuildName || !enemyGuildsData[currentEnemyGuildName]) return;
+    const checkbox = document.getElementById('todayMatchToggle');
+    enemyGuildsData[currentEnemyGuildName].todayMatch = checkbox.checked;
+    saveData();
+  }
+
   function renderTabs() {
     const container = document.getElementById('enemyTabsContainer');
-    const keys = Object.keys(enemyGuilds);
+    const keys = Object.keys(enemyGuildsData);
+    const enemySection = document.getElementById('enemySection');
 
+    if (keys.length === 0) {
+      container.innerHTML = '<div style="color: #64748b; font-size: 13px; padding: 6px 0;">上のフォームから敵ギルド名を追加してください。</div>';
+      enemySection.style.display = 'none';
+      return;
+    }
+
+    enemySection.style.display = 'block';
     container.innerHTML = keys.map(name => {
       const isActive = name === currentEnemyGuildName ? 'active' : '';
+      const isTodayMatch = enemyGuildsData[name].todayMatch !== false;
+      const matchBadge = isTodayMatch ? '⚔️' : '💤';
       return `
         <div class="enemy-tab ${isActive}" onclick="switchEnemyTab('${name}')">
-          <span>${name}</span>
+          <span>${matchBadge} ${name}</span>
           <span class="tab-del" onclick="removeEnemyGuild('${name}', event)">×</span>
         </div>
       `;
     }).join('');
 
-    document.querySelectorAll('.currentEnemyLabel').forEach(e => e.innerText = currentEnemyGuildName);
+    if (!enemyGuildsData[currentEnemyGuildName] && keys.length > 0) {
+      currentEnemyGuildName = keys[0];
+    }
+
+    if (currentEnemyGuildName && enemyGuildsData[currentEnemyGuildName]) {
+      document.getElementById('todayMatchToggle').checked = enemyGuildsData[currentEnemyGuildName].todayMatch !== false;
+      document.querySelectorAll('.currentEnemyLabel').forEach(e => e.innerText = currentEnemyGuildName);
+    }
   }
 
-  // 敵タブ切り替え
   function switchEnemyTab(guildName) {
     currentEnemyGuildName = guildName;
+    saveData();
     renderTabs();
     renderMembers();
   }
 
-  // ファイル選択個数表示
   function handleFileSelect(event, targetId) {
     const files = event.target.files;
     const count = files ? files.length : 0;
     document.getElementById(targetId).innerText = count > 0 ? `${count} 枚の画像を選択中` : '';
   }
 
-  // 手動メンバー追加
-  function addManualMember(type) {
+  function saveManualMember(type) {
     const isMy = type === 'my';
     const prefix = isMy ? 'myManual' : 'enemyManual';
+    const editIdInput = document.getElementById(isMy ? 'myEditId' : 'enemyEditId');
+    const submitBtn = document.getElementById(isMy ? 'mySubmitBtn' : 'enemySubmitBtn');
 
-    const name = document.getElementById(prefix + 'Name').value.trim() || '手動プレイヤー';
+    if (!isMy && !currentEnemyGuildName) {
+      return alert('先に敵ギルドを追加して選択してください。');
+    }
+
+    const name = document.getElementById(prefix + 'Name').value.trim() || 'プレイヤー';
     const mainPower = parsePowerInput(document.getElementById(prefix + 'MainPower').value);
     
     const elem1 = document.getElementById(prefix + 'Element1').value;
@@ -494,37 +583,81 @@
       return;
     }
 
-    const member = {
-      id: Date.now() + Math.random(),
+    const editId = editIdInput.value ? Number(editIdInput.value) : null;
+
+    const memberData = {
+      id: editId || (Date.now() + Math.random()),
       name,
       mainPower,
-      chars: [
-        { element: elem1, power: charPower1 }
-      ]
+      chars: [{ element: elem1, power: charPower1 }]
     };
 
     if (elem2 && charPower2 > 0) {
-      member.chars.push({ element: elem2, power: charPower2 });
+      memberData.chars.push({ element: elem2, power: charPower2 });
     }
 
     if (isMy) {
-      myGuildMembers.push(member);
+      if (editId) {
+        const idx = myGuildMembers.findIndex(m => m.id === editId);
+        if (idx !== -1) myGuildMembers[idx] = memberData;
+      } else {
+        myGuildMembers.push(memberData);
+      }
     } else {
-      enemyGuilds[currentEnemyGuildName].push(member);
+      const list = enemyGuildsData[currentEnemyGuildName].members;
+      if (editId) {
+        const idx = list.findIndex(m => m.id === editId);
+        if (idx !== -1) list[idx] = memberData;
+      } else {
+        list.push(memberData);
+      }
     }
 
-    // 入力クリア
+    editIdInput.value = '';
+    submitBtn.innerText = isMy ? '味方メンバーを追加する' : '敵メンバーを追加する';
     document.getElementById(prefix + 'Name').value = '';
     document.getElementById(prefix + 'MainPower').value = '';
     document.getElementById(prefix + 'CharPower1').value = '';
     document.getElementById(prefix + 'CharPower2').value = '';
 
+    saveData();
     renderMembers();
   }
 
-  // メモ一括追加処理
+  function editMember(type, id) {
+    const isMy = type === 'my';
+    const prefix = isMy ? 'myManual' : 'enemyManual';
+    const list = isMy ? myGuildMembers : enemyGuildsData[currentEnemyGuildName].members;
+    const member = list.find(m => m.id === id);
+
+    if (!member) return;
+
+    document.getElementById(isMy ? 'myEditId' : 'enemyEditId').value = member.id;
+    document.getElementById(prefix + 'Name').value = member.name;
+    document.getElementById(prefix + 'MainPower').value = Math.round(member.mainPower / 10000);
+    
+    if (member.chars[0]) {
+      document.getElementById(prefix + 'Element1').value = member.chars[0].element;
+      document.getElementById(prefix + 'CharPower1').value = Math.round(member.chars[0].power / 10000);
+    }
+    if (member.chars[1]) {
+      document.getElementById(prefix + 'Element2').value = member.chars[1].element;
+      document.getElementById(prefix + 'CharPower2').value = Math.round(member.chars[1].power / 10000);
+    } else {
+      document.getElementById(prefix + 'Element2').value = '';
+      document.getElementById(prefix + 'CharPower2').value = '';
+    }
+
+    document.getElementById(isMy ? 'mySubmitBtn' : 'enemySubmitBtn').innerText = '変更を保存する（上書き）';
+    window.scrollTo({ top: isMy ? 0 : 500, behavior: 'smooth' });
+  }
+
   function addMembersFromMemo(type) {
     const isMy = type === 'my';
+    if (!isMy && !currentEnemyGuildName) {
+      return alert('先に敵ギルドを追加して選択してください。');
+    }
+
     const textarea = document.getElementById(isMy ? 'myMemoInput' : 'enemyMemoInput');
     const text = textarea.value.trim();
 
@@ -550,7 +683,6 @@
             chars: [{ element: elem1, power: charPower1 }]
           };
 
-          // キャラ2がある場合
           if (parts.length >= 6 && parts[4]) {
             const elem2 = normalizeElement(parts[4]);
             const charPower2 = parsePowerInput(parts[5]);
@@ -562,7 +694,7 @@
           if (isMy) {
             myGuildMembers.push(member);
           } else {
-            enemyGuilds[currentEnemyGuildName].push(member);
+            enemyGuildsData[currentEnemyGuildName].members.push(member);
           }
           addedCount++;
         }
@@ -574,17 +706,21 @@
     }
 
     textarea.value = '';
+    saveData();
     renderMembers();
     alert(`${addedCount} 名のメンバーをまとめて追加しました！`);
   }
 
-  // 一括画像解析 (Gemini API) - 複数メインキャラ抽出対応
   async function analyzeMultipleImages(type) {
+    const isMy = type === 'my';
+    if (!isMy && !currentEnemyGuildName) {
+      return alert('先に敵ギルドを追加して選択してください。');
+    }
+
     const apiKey = document.getElementById('apiKey').value.trim();
     if (!apiKey) return alert('APIキーを入力してください。');
     localStorage.setItem('gemini_api_key', apiKey);
 
-    const isMy = type === 'my';
     const fileInput = document.getElementById(isMy ? 'myImageInput' : 'enemyImageInput');
     const files = fileInput.files;
 
@@ -600,9 +736,9 @@
 
 【抽出項目】
 1. playerName: プレイヤー名
-2. mainPower: メイン部隊の「部隊総戦力」(数値)
+2. mainPower: メイン部隊の「部隊総戦力」(数値。小数点以下は四捨五入して整数にしてください)
 3. mainChars: 部隊内の「主力・高戦力キャラ（最大2名まで）」の配列。
-   各キャラについて {"element": 属性, "power": 戦力数値} を取得。
+   各キャラについて {"element": 属性, "power": 戦力数値(小数点以下四捨五入)} を取得。
    ※属性は "光", "闇", "地", "緑", "黄", "紫" のいずれか。
 
 【JSONフォーマット例】:
@@ -639,7 +775,7 @@
             json.mainChars.forEach(c => {
               chars.push({
                 element: normalizeElement(c.element),
-                power: parsePowerInput(c.power)
+                power: Math.round(parsePowerInput(c.power))
               });
             });
           }
@@ -651,14 +787,14 @@
           const member = {
             id: Date.now() + Math.random(),
             name: json.playerName || `プレイヤー_${i + 1}`,
-            mainPower: parsePowerInput(json.mainPower),
+            mainPower: Math.round(parsePowerInput(json.mainPower)),
             chars: chars
           };
 
           if (isMy) {
             myGuildMembers.push(member);
           } else {
-            enemyGuilds[currentEnemyGuildName].push(member);
+            enemyGuildsData[currentEnemyGuildName].members.push(member);
           }
         }
       } catch (e) {
@@ -669,6 +805,7 @@
     loadingElem.style.display = 'none';
     fileInput.value = '';
     document.getElementById(isMy ? 'myPreviewCount' : 'enemyPreviewCount').innerText = '';
+    saveData();
     renderMembers();
     alert(`画像の解析・登録が完了しました！`);
   }
@@ -682,13 +819,11 @@
     });
   }
 
-  // リスト再描画
   function renderMembers() {
     function formatChars(chars) {
       return chars.map(c => `${c.element}${formatPower(c.power)}`).join(' / ');
     }
 
-    // 自ギルド
     document.getElementById('myCount').innerText = myGuildMembers.length;
     const myListElem = document.getElementById('myList');
     myListElem.innerHTML = myGuildMembers.map(m => `
@@ -697,12 +832,14 @@
           <strong>${m.name}</strong><br>
           <span style="color:#64748b;">総戦力: ${formatPower(m.mainPower)} | 主力: [ ${formatChars(m.chars)} ]</span>
         </div>
-        <button class="btn-del" onclick="deleteMember('my', ${m.id})">削除</button>
+        <div>
+          <button class="btn-edit" onclick="editMember('my', ${m.id})">編集</button>
+          <button class="btn-del" onclick="deleteMember('my', ${m.id})">削除</button>
+        </div>
       </div>
     `).join('');
 
-    // 選択中の敵ギルド
-    const enemyList = enemyGuilds[currentEnemyGuildName] || [];
+    const enemyList = (enemyGuildsData[currentEnemyGuildName] && enemyGuildsData[currentEnemyGuildName].members) || [];
     document.getElementById('enemyCount').innerText = enemyList.length;
     const enemyListElem = document.getElementById('enemyList');
     enemyListElem.innerHTML = enemyList.map(m => `
@@ -711,7 +848,10 @@
           <strong>${m.name}</strong><br>
           <span style="color:#64748b;">総戦力: ${formatPower(m.mainPower)} | 主力: [ ${formatChars(m.chars)} ]</span>
         </div>
-        <button class="btn-del" onclick="deleteMember('enemy', ${m.id})">削除</button>
+        <div>
+          <button class="btn-edit" onclick="editMember('enemy', ${m.id})">編集</button>
+          <button class="btn-del" onclick="deleteMember('enemy', ${m.id})">削除</button>
+        </div>
       </div>
     `).join('');
   }
@@ -721,84 +861,47 @@
       const idx = myGuildMembers.findIndex(m => m.id === id);
       if (idx !== -1) myGuildMembers.splice(idx, 1);
     } else {
-      const list = enemyGuilds[currentEnemyGuildName];
+      const list = enemyGuildsData[currentEnemyGuildName].members;
       const idx = list.findIndex(m => m.id === id);
       if (idx !== -1) list.splice(idx, 1);
     }
+    saveData();
     renderMembers();
   }
 
-
-  /* ==========================================
-     分析・ロジック計算エリア（STEP 3）
-     ========================================== */
-
-  function isAdvantageous(attElem, defElem) {
-    if (attElem === "光" && defElem === "闇") return true;
-    if (attElem === "闇" && defElem === "地") return true;
-    if (attElem === "地" && defElem === "光") return true;
-    return false;
-  }
-
-  // 1人のメンバーの「基礎基準戦力」
-  function getBasePower(member) {
-    const totalCharPower = member.chars.reduce((sum, c) => sum + c.power, 0);
-    if (member.mainPower > 0 && (totalCharPower / member.mainPower) > 0.7) {
-      return totalCharPower;
-    }
-    return member.mainPower;
-  }
-
-  // 相手のメイン属性に対する「実効戦力」を算出
-  function getEffectivePower(attacker, defender) {
-    const targetElem = defender.chars[0] ? defender.chars[0].element : "光";
-    
-    let effPower = 0;
-    let charSumPower = 0;
-
-    attacker.chars.forEach(c => {
-      charSumPower += c.power;
-      if (isAdvantageous(c.element, targetElem)) {
-        effPower += c.power / 0.75; // 有利属性（約1.33倍）
-      } else {
-        effPower += c.power;
-      }
-    });
-
-    const remainingPower = Math.max(0, attacker.mainPower - charSumPower);
-    effPower += remainingPower;
-
-    return effPower;
-  }
-
-  // 分析実行処理
+  // 分析実行（疲労度％は Math.ceil で切り上げ整数表記）
   function runAnalysis() {
     if (myGuildMembers.length === 0) {
-      return alert('自ギルドのメンバーを登録してください。');
+      return alert('味方ギルドのメンバーを登録してください。');
+    }
+
+    const targetGuilds = Object.keys(enemyGuildsData).filter(gName => enemyGuildsData[gName].todayMatch !== false);
+
+    if (targetGuilds.length === 0) {
+      return alert('本日対戦する（チェックが入っている）敵ギルドがありません。敵ギルドタブを選択して「本日この敵ギルドと戦う」にチェックを入れてください。');
     }
 
     let output = "";
     const availableMy = [...myGuildMembers];
 
-    Object.keys(enemyGuilds).forEach(guildName => {
-      const enemies = enemyGuilds[guildName];
+    targetGuilds.forEach(guildName => {
+      const enemies = enemyGuildsData[guildName].members;
       if (enemies.length === 0) return;
 
-      output += `●敵ギルド：${guildName}\n`;
+      output += `●${guildName}\n`;
 
       const sortedEnemies = [...enemies].sort((a, b) => getBasePower(b) - getBasePower(a));
 
       sortedEnemies.forEach(enemy => {
         const enemyBase = getBasePower(enemy);
         const enemyCharsStr = enemy.chars.map(c => `${c.element}${formatPower(c.power)}`).join('+');
-        const enemyDesc = `${enemy.name} ${formatPower(enemy.mainPower)}（${enemyCharsStr}）`;
+        const enemyDesc = `${enemy.name} ${formatPower(enemy.mainPower)} (${enemyCharsStr})`;
 
         if (availableMy.length === 0) {
-          output += `  ${enemyDesc} → 担当部隊なし (自ギルド全部隊使用済み)\n`;
+          output += ` ${enemyDesc}→担当なし\n`;
           return;
         }
 
-        // 1. 1対1で勝利できる最少・最適部隊を探す
         let directMatchIdx = -1;
         let minDiff = Infinity;
 
@@ -815,30 +918,20 @@
 
         if (directMatchIdx !== -1) {
           const matchedMy = availableMy.splice(directMatchIdx, 1)[0];
-          output += `  ${enemyDesc} → 100% ${matchedMy.name}\n`;
+          output += ` ${enemyDesc}→0% ${matchedMy.name}\n`;
         } else {
-          // 2. 疲労度削り戦略
           availableMy.sort((a, b) => getEffectivePower(b, enemy) - getEffectivePower(a, enemy));
-          const mainAttacker = availableMy[0];
-          const mainEff = getEffectivePower(mainAttacker, enemy);
+          const mainUnit = availableMy.shift();
+          const mainEff = getEffectivePower(mainUnit, enemy);
 
           const gap = enemyBase - mainEff;
-          const neededChipsCount = Math.ceil(gap / (enemyBase * 0.0125));
+          const fatiguePerAttack = enemyBase * 0.0125;
+          const neededChipsCount = Math.max(1, Math.ceil(gap / fatiguePerAttack));
+          
+          // 疲労度％を整数に切り上げ
+          const totalFatigue = Math.ceil(neededChipsCount * 1.25);
 
-          if (neededChipsCount < availableMy.length) {
-            const chips = [];
-            for (let c = 0; c < neededChipsCount; c++) {
-              const chipUnit = availableMy.pop();
-              chips.push(chipUnit.name);
-            }
-            const mainUnit = availableMy.shift();
-            
-            const totalFatigue = (neededChipsCount * 1.25).toFixed(2);
-            output += `  ${enemyDesc} → ${chips.join(', ')} (${totalFatigue}%削り) → 100% ${mainUnit.name}\n`;
-          } else {
-            const fallbackMy = availableMy.shift();
-            output += `  ${enemyDesc} → (格上挑戦) 100% ${fallbackMy.name}\n`;
-          }
+          output += ` ${enemyDesc}→${totalFatigue}% ${mainUnit.name}\n`;
         }
       });
 
@@ -846,10 +939,67 @@
     });
 
     if (output.trim() === "") {
-      output = "敵ギルドのデータが登録されていません。STEP 2で敵ギルドを追加してメンバーを入力してください。";
+      output = "選択された対戦ギルドにメンバーが登録されていません。メンバー情報を入力してください。";
     }
 
-    document.getElementById('noticeOutput').value = output;
+    document.getElementById('noticeOutput').value = output.trim();
+  }
+
+  function copyOutputText() {
+    const outputBox = document.getElementById('noticeOutput');
+    const text = outputBox.value.trim();
+
+    if (!text) {
+      return alert('コピーする分析結果がありません。まずは分析を実行してください。');
+    }
+
+    navigator.clipboard.writeText(text).then(() => {
+      alert('分析結果をクリップボードにコピーしました！');
+    }).catch(err => {
+      outputBox.select();
+      document.execCommand('copy');
+      alert('分析結果をコピーしました！');
+    });
+  }
+
+  function isAdvantageous(attElem, defElem) {
+    if (attElem === "光" && defElem === "闇") return true;
+    if (attElem === "闇" && defElem === "地") return true;
+    if (attElem === "地" && defElem === "光") return true;
+    return false;
+  }
+
+  function getBasePower(member) {
+    const totalCharPower = member.chars.reduce((sum, c) => sum + c.power, 0);
+    if (member.mainPower > 0 && (totalCharPower / member.mainPower) > 0.7) {
+      return totalCharPower;
+    }
+    return member.mainPower;
+  }
+
+  function getEffectivePower(attacker, defender) {
+    const targetElem = defender.chars[0] ? defender.chars[0].element : "光";
+    
+    let effPower = 0;
+    let charSumPower = 0;
+
+    attacker.chars.forEach(c => {
+      charSumPower += c.power;
+      if (isAdvantageous(c.element, targetElem)) {
+        effPower += c.power / 0.75;
+      } else {
+        effPower += c.power;
+      }
+    });
+
+    const isCarry = attacker.mainPower > 0 && (charSumPower / attacker.mainPower) > 0.7;
+
+    if (!isCarry) {
+      const remainingPower = Math.max(0, attacker.mainPower - charSumPower);
+      effPower += remainingPower;
+    }
+
+    return effPower;
   }
 </script>
 
