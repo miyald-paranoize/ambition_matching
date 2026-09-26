@@ -22,7 +22,7 @@
       font-size: 14px;
     }
     .container {
-      max-width: 950px;
+      max-width: 980px;
       margin: 0 auto;
       background: var(--card-bg);
       padding: 20px;
@@ -83,8 +83,17 @@
     .btn-cancel { background-color: #64748b; color: white; }
     .btn-edit { background-color: #3b82f6; color: white; }
     .btn-del { background-color: #ef4444; color: white; }
-    .btn-copy { background-color: #2563eb; color: white; width: 100%; font-size: 14px; padding: 10px; margin-top: 8px; }
-    .btn-copy:hover { background-color: #1d4ed8; }
+    
+    /* コピーボタン（緑系） */
+    .btn-copy-green {
+      background-color: #059669;
+      color: white;
+      width: 100%;
+      font-size: 14px;
+      padding: 10px;
+      margin-top: 8px;
+    }
+    .btn-copy-green:hover { background-color: #047857; }
     
     .card {
       border-radius: 8px;
@@ -154,6 +163,15 @@
       width: 70px;
       display: inline-block;
     }
+
+    .select-rt {
+      padding: 4px 6px;
+      border-radius: 4px;
+      border: 1px solid #cbd5e1;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+    }
     
     .enemy-tabs {
       display: flex;
@@ -217,9 +235,9 @@
       text-align: center;
     }
     .result-box {
-      height: 240px;
+      height: 180px;
       font-family: monospace;
-      margin-top: 10px;
+      margin-top: 6px;
       white-space: pre-wrap;
     }
     .memo-textarea {
@@ -228,12 +246,21 @@
       font-family: monospace;
       resize: vertical;
     }
+
+    .output-guild-title {
+      font-weight: bold;
+      color: #047857;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
     .logic-explanation {
       background: #ffffff;
       border: 1px solid #a7f3d0;
       border-radius: 6px;
       padding: 12px;
-      margin-top: 12px;
+      margin-top: 16px;
       font-size: 12px;
       color: #065f46;
       line-height: 1.5;
@@ -313,7 +340,7 @@
         <label style="color:var(--primary);">メモから一括登録（制限なし）</label>
         <span class="form-label-sub">書式: プレーヤー名 総戦力 キャラ1属性 キャラ1戦力 [キャラ2属性 キャラ2戦力] （カンマ・スペース区切り両対応）</span>
         <textarea id="myMemoInput" class="memo-textarea" placeholder="つむ 1500万 光 1000万&#10;織田信長, 500万, 光, 270万, 闇, 200万"></textarea>
-        <button class="btn-sub" style="width:100%; margin-top:4px;" onclick="addMembersFromMemo('my')">メモから一括登録</button>
+        <button class="btn-main" style="margin-top:4px;" onclick="addMembersFromMemo('my')">メモから一括登録</button>
       </div>
 
       <hr style="border:0; border-top:1px solid #bfdbfe; margin:14px 0;">
@@ -322,9 +349,8 @@
         <label style="color:var(--primary);">一括写真読み取り（最大5枚推奨）</label>
         <input type="file" id="myImageInput" accept="image/*" multiple onchange="handleFileSelect(event, 'myPreviewCount')">
         <div id="myPreviewCount" style="font-size: 12px; color: #475569; margin-top: 4px;"></div>
-        <button class="btn-sub" style="width:100%; margin-top:8px;" onclick="analyzeMultipleImages('my')">画像を一括解析して登録</button>
+        <button class="btn-main" style="margin-top:8px;" onclick="analyzeMultipleImages('my')">画像を一括解析して登録</button>
         
-        <!-- 無料枠の制限に関する注意書き -->
         <div class="ai-notice">
           ⚠️ <strong>AI解析の注意点:</strong> Google AI Studioの無料枠の利用制限（1分あたりのリクエスト数上限）を考慮し、一度に選択する画像は<strong>最大5枚まで</strong>にしてください。エラーで読み込めない場合は、<strong>「1名ずつ追加」</strong>または<strong>「メモから一括登録」</strong>をご利用ください。
         </div>
@@ -335,12 +361,12 @@
     </div>
 
     <div>
-      <label>味方ギルド 登録メンバー (<span id="myCount">0</span>名) <span style="font-size:11px; font-weight:normal; color:#64748b;">※「直接編集」ボタンでテーブル上の数値をその場で書き換えられます</span></label>
+      <label>味方ギルド 登録メンバー (<span id="myCount">0</span>名) <span style="font-size:11px; font-weight:normal; color:#64748b;">※リアタイ「◯」のみマッチング対象。「△」「×」は除外されます。</span></label>
       <div class="member-table-container">
         <table>
           <thead>
             <tr>
-              <th style="width:40px; text-align:center;">参戦</th>
+              <th style="width:75px; text-align:center;">リアタイ</th>
               <th>プレイヤー名</th>
               <th>総戦力</th>
               <th>主力キャラ1</th>
@@ -439,7 +465,6 @@
           <div id="enemyPreviewCount" style="font-size: 12px; color: #7f1d1d; margin-top: 4px;"></div>
           <button class="btn-sub" style="width:100%; margin-top:8px; background:#dc2626;" onclick="analyzeMultipleImages('enemy')">画像を一括解析して登録</button>
           
-          <!-- 無料枠の制限に関する注意書き -->
           <div class="ai-notice ai-notice-enemy">
             ⚠️ <strong>AI解析の注意点:</strong> 無料枠の制限を考慮し、一度に選択する画像は<strong>最大5枚まで</strong>にしてください。エラー時は<strong>「1名ずつ追加」</strong>または<strong>「メモから一括登録」</strong>をご利用ください。
           </div>
@@ -450,11 +475,12 @@
       </div>
 
       <div>
-        <label>【敵ギルド：<span class="currentEnemyLabel">--</span>】登録メンバー (<span id="enemyCount">0</span>名)</label>
+        <label>【敵ギルド：<span class="currentEnemyLabel">--</span>】登録メンバー (<span id="enemyCount">0</span>名) <span style="font-size:11px; font-weight:normal; color:#b91c1c;">※「除外」にチェックを入れた部隊はマッチング対象外になり、「要注意部隊」へ出力されます。</span></label>
         <div class="member-table-container">
           <table>
             <thead>
               <tr>
+                <th style="width:50px; text-align:center;">除外</th>
                 <th>プレイヤー名</th>
                 <th>総戦力</th>
                 <th>主力キャラ1</th>
@@ -477,10 +503,26 @@
     <div class="card card-output">
       <button class="btn-main" style="background-color: #059669;" onclick="runAnalysis()">敵ギルドへの部隊割り振り分析を実行</button>
 
-      <div class="form-group" style="margin-top: 16px; margin-bottom: 0;">
-        <label for="noticeOutput" style="color: #047857;">分析結果（チャットコピー用）</label>
-        <textarea id="noticeOutput" class="result-box" readonly placeholder="「分析を実行」を押すとここに結果が出力されます"></textarea>
-        <button class="btn-copy" onclick="copyOutputText()">分析結果をコピーする</button>
+      <!-- 1. マッチング結果一覧（確認用・コピーボタンなし） -->
+      <div class="form-group" style="margin-top: 16px;">
+        <label style="color: #047857; font-size:14px;">📊 マッチング割り振り一覧（確認用）</label>
+        <div id="matchOutputContainer">
+          <div style="font-size:12px; color:#64748b; padding:10px 0;">「分析を実行」を押すとここに敵ギルド別のマッチング表が表示されます。</div>
+        </div>
+      </div>
+
+      <!-- 2. 味方ギルド周知用テキスト（チャットコピー用） -->
+      <div class="form-group" style="margin-top: 20px;">
+        <label for="noticeOutput" style="color: #047857; font-size:14px;">📢 味方ギルド周知用テキスト（チャットコピー用）</label>
+        <textarea id="noticeOutput" class="result-box" readonly placeholder="「分析を実行」を押すとここに指示出し用のチャットテキストが出力されます"></textarea>
+        <button class="btn-copy-green" onclick="copyText('noticeOutput', '周知用テキスト')">周知用テキストをコピーする</button>
+      </div>
+
+      <!-- 3. その他の要注意部隊（除外部隊・別枠＆コピーボタンあり） -->
+      <div class="form-group" style="margin-top: 20px; padding: 12px; background: #fff; border: 1px dashed #ef4444; border-radius: 8px;">
+        <label for="excludedOutput" style="color: #b91c1c; font-size:14px;">⚠️ その他の要注意部隊（除外部隊リスト）</label>
+        <textarea id="excludedOutput" class="result-box" style="border-color:#fecaca;" readonly placeholder="「除外」にチェックが入った敵部隊がここにリストアップされます"></textarea>
+        <button class="btn-copy-green" onclick="copyText('excludedOutput', '要注意部隊リスト')">要注意部隊リストをコピーする</button>
       </div>
 
       <div class="logic-explanation">
@@ -488,8 +530,8 @@
         <ul>
           <li><strong>属性相性 (三すくみ)</strong>: 光 ＞ 闇 ＞ 地 ＞ 光。有利属性のキャラは戦力が約1.33倍（25%軽減相当）に換算されます。</li>
           <li><strong>キャリー判定 (70%ルール)</strong>: 主力キャラの合計が部隊総戦力の70%超なら主力基準、以下なら総戦力をベースに評価します。</li>
-          <li><strong>0%（削り不要）</strong>: 味方の実効戦力が敵の評価戦力を上回る場合、無駄な戦力差が最も小さい最適部隊を割り当てます。</li>
-          <li><strong>疲労度 % 計算</strong>: 味方の戦力が敵に届かない場合、本命部隊を当てるために必要な不足戦力を算出し、1回あたり1.25%の蓄積疲労度を<strong>切り上げの整数</strong>で表示します。</li>
+          <li><strong>リアタイ判定</strong>: 味方のリアタイ状態が「◯」のメンバーのみをマッチング対象にします（「△」「×」は除外）。</li>
+          <li><strong>敵除外判定</strong>: 敵テーブルで「除外」チェックが入った部隊は別枠の「要注意部隊」へ切り離されます。</li>
         </ul>
       </div>
     </div>
@@ -497,11 +539,10 @@
 </div>
 
 <script>
-  let myGuildMembers = JSON.parse(localStorage.getItem('paranoise_my_members_v5')) || [];
-  let enemyGuildsData = JSON.parse(localStorage.getItem('paranoise_enemy_guilds_v5')) || {};
-  let currentEnemyGuildName = localStorage.getItem('paranoise_current_enemy_v5') || "";
+  let myGuildMembers = JSON.parse(localStorage.getItem('paranoise_my_members_v6')) || [];
+  let enemyGuildsData = JSON.parse(localStorage.getItem('paranoise_enemy_guilds_v6')) || {};
+  let currentEnemyGuildName = localStorage.getItem('paranoise_current_enemy_v6') || "";
 
-  // タイムスタンプ生成関数
   function getCurrentTimestamp() {
     const now = new Date();
     const yyyy = now.getFullYear();
@@ -513,9 +554,9 @@
   }
 
   function saveData() {
-    localStorage.setItem('paranoise_my_members_v5', JSON.stringify(myGuildMembers));
-    localStorage.setItem('paranoise_enemy_guilds_v5', JSON.stringify(enemyGuildsData));
-    localStorage.setItem('paranoise_current_enemy_v5', currentEnemyGuildName);
+    localStorage.setItem('paranoise_my_members_v6', JSON.stringify(myGuildMembers));
+    localStorage.setItem('paranoise_enemy_guilds_v6', JSON.stringify(enemyGuildsData));
+    localStorage.setItem('paranoise_current_enemy_v6', currentEnemyGuildName);
   }
 
   function normalizeElement(elem) {
@@ -605,10 +646,19 @@
     saveData();
   }
 
-  function toggleMyParticipation(id) {
+  function updateMyRealtime(id, val) {
     const member = myGuildMembers.find(m => m.id === id);
     if (member) {
-      member.participating = document.getElementById(`part_${id}`).checked;
+      member.realtime = val;
+      saveData();
+    }
+  }
+
+  function toggleEnemyExclusion(id) {
+    const list = enemyGuildsData[currentEnemyGuildName].members;
+    const member = list.find(m => m.id === id);
+    if (member) {
+      member.excluded = document.getElementById(`ex_${id}`).checked;
       saveData();
     }
   }
@@ -687,7 +737,8 @@
       name,
       mainPower,
       chars: [{ element: elem1, power: charPower1 }],
-      participating: true,
+      realtime: '◯',
+      excluded: false,
       timestamp: getCurrentTimestamp()
     };
 
@@ -722,12 +773,20 @@
     const c1 = m.chars[0] || { element: '光', power: 0 };
     const c2 = m.chars[1] || { element: '', power: 0 };
 
-    const partCellHtml = isMy ? `
-      <td style="text-align:center;"><input type="checkbox" id="part_${m.id}" ${m.participating !== false ? 'checked' : ''} onchange="toggleMyParticipation(${m.id})" style="cursor:pointer; width:16px; height:16px;"></td>
-    ` : '';
+    const firstCellHtml = isMy ? `
+      <td style="text-align:center;">
+        <select onchange="updateMyRealtime(${m.id}, this.value)" class="select-rt">
+          <option value="◯" ${m.realtime === '◯' ? 'selected' : ''}>◯</option>
+          <option value="△" ${m.realtime === '△' ? 'selected' : ''}>△</option>
+          <option value="×" ${m.realtime === '×' ? 'selected' : ''}>×</option>
+        </select>
+      </td>
+    ` : `
+      <td style="text-align:center;"><input type="checkbox" id="ex_${m.id}" ${m.excluded ? 'checked' : ''} onchange="toggleEnemyExclusion(${m.id})" style="cursor:pointer; width:16px; height:16px;"></td>
+    `;
 
     row.innerHTML = `
-      ${partCellHtml}
+      ${firstCellHtml}
       <td><input type="text" id="edit_name_${id}" class="inline-input" value="${m.name}"></td>
       <td><input type="text" id="edit_main_${id}" class="inline-input inline-input-sm" value="${Math.round(m.mainPower/10000)}">万</td>
       <td>
@@ -802,7 +861,6 @@
     const timestamp = getCurrentTimestamp();
 
     lines.forEach(line => {
-      // カンマだけでなく半角・全角スペースでも区切れるように分割
       const parts = line.split(/[,，、\s\u3000]+/).map(p => p.trim()).filter(p => p.length > 0);
       if (parts.length >= 4) {
         const name = parts[0] || '名無し';
@@ -816,7 +874,8 @@
             name,
             mainPower,
             chars: [{ element: elem1, power: charPower1 }],
-            participating: true,
+            realtime: '◯',
+            excluded: false,
             timestamp: timestamp
           };
 
@@ -928,7 +987,8 @@
             name: json.playerName || `プレイヤー_${i + 1}`,
             mainPower: Math.round(parsePowerInput(json.mainPower)),
             chars: chars,
-            participating: true,
+            realtime: '◯',
+            excluded: false,
             timestamp: timestamp
           };
 
@@ -975,12 +1035,18 @@
     document.getElementById('myCount').innerText = myGuildMembers.length;
     const myTableBody = document.getElementById('myTableBody');
     myTableBody.innerHTML = myGuildMembers.map(m => {
-      const isChecked = m.participating !== false ? 'checked' : '';
+      const rtVal = m.realtime || '◯';
       const c1 = m.chars[0] ? formatCharSingle(m.chars[0]) : '-';
       const c2 = m.chars[1] ? formatCharSingle(m.chars[1]) : '-';
       return `
         <tr id="row_my_${m.id}">
-          <td style="text-align:center;"><input type="checkbox" id="part_${m.id}" ${isChecked} onchange="toggleMyParticipation(${m.id})" style="cursor:pointer; width:16px; height:16px;"></td>
+          <td style="text-align:center;">
+            <select onchange="updateMyRealtime(${m.id}, this.value)" class="select-rt">
+              <option value="◯" ${rtVal === '◯' ? 'selected' : ''}>◯</option>
+              <option value="△" ${rtVal === '△' ? 'selected' : ''}>△</option>
+              <option value="×" ${rtVal === '×' ? 'selected' : ''}>×</option>
+            </select>
+          </td>
           <td><strong>${m.name}</strong></td>
           <td>${formatPower(m.mainPower)}</td>
           <td>${c1}</td>
@@ -998,10 +1064,12 @@
     document.getElementById('enemyCount').innerText = enemyList.length;
     const enemyTableBody = document.getElementById('enemyTableBody');
     enemyTableBody.innerHTML = enemyList.map(m => {
+      const isEx = m.excluded ? 'checked' : '';
       const c1 = m.chars[0] ? formatCharSingle(m.chars[0]) : '-';
       const c2 = m.chars[1] ? formatCharSingle(m.chars[1]) : '-';
       return `
         <tr id="row_enemy_${m.id}">
+          <td style="text-align:center;"><input type="checkbox" id="ex_${m.id}" ${isEx} onchange="toggleEnemyExclusion(${m.id})" style="cursor:pointer; width:16px; height:16px;"></td>
           <td><strong>${m.name}</strong></td>
           <td>${formatPower(m.mainPower)}</td>
           <td>${c1}</td>
@@ -1031,11 +1099,12 @@
     }
   }
 
+  // 分析実行
   function runAnalysis() {
-    const activeMyMembers = myGuildMembers.filter(m => m.participating !== false);
+    const activeMyMembers = myGuildMembers.filter(m => (m.realtime || '◯') === '◯');
 
     if (activeMyMembers.length === 0) {
-      return alert('本日のマッチングに参加する味方メンバーがいません（全員お休みチェックが入っているか、未登録です）。');
+      return alert('本日のマッチングに参加する味方メンバーがいません（全員リアタイが「△」「×」か、未登録です）。');
     }
 
     const targetGuilds = Object.keys(enemyGuildsData).filter(gName => enemyGuildsData[gName].todayMatch !== false);
@@ -1044,24 +1113,73 @@
       return alert('本日対戦する（チェックが入っている）敵ギルドがありません。');
     }
 
-    let output = "";
+    let matchOutputHtml = "";
+    let noticeText = "";
+    let excludedListText = "";
     const availableMy = [...activeMyMembers];
 
     targetGuilds.forEach(guildName => {
       const enemies = enemyGuildsData[guildName].members;
       if (enemies.length === 0) return;
 
-      output += `●${guildName}\n`;
+      const targetEnemies = enemies.filter(e => !e.excluded);
+      const excludedEnemies = enemies.filter(e => e.excluded);
 
-      const sortedEnemies = [...enemies].sort((a, b) => getBasePower(b) - getBasePower(a));
+      // 要注意部隊リスト（テキスト形式）
+      if (excludedEnemies.length > 0) {
+        excludedListText += `●${guildName} (要注意部隊)\n`;
+        excludedEnemies.forEach(e => {
+          const cStr = e.chars.map(c => `${c.element}${formatPower(c.power)}`).join('+');
+          excludedListText += ` ・${e.name} ${formatPower(e.mainPower)} (${cStr})\n`;
+        });
+        excludedListText += `\n`;
+      }
+
+      if (targetEnemies.length === 0) return;
+
+      // 1. 確認用テーブルHTML生成
+      matchOutputHtml += `<div class="output-guild-title">● 敵ギルド: ${guildName}</div>`;
+      matchOutputHtml += `
+        <div class="member-table-container" style="margin-bottom:12px;">
+          <table>
+            <thead>
+              <tr style="background:#f1f5f9;">
+                <th colspan="4" style="color:#b91c1c; border-right:2px solid #e2e8f0;">⚔️ 敵プレイヤー</th>
+                <th colspan="4" style="color:#1d4ed8;">🛡️ 味方担当</th>
+              </tr>
+              <tr>
+                <th>名前</th><th>部隊戦力</th><th>属性</th><th>主力戦力</th>
+                <th>名前</th><th>部隊戦力</th><th>属性</th><th>主力戦力</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      // 2. 味方周知用テキスト生成の準備
+      noticeText += `●${guildName}\n`;
+
+      const sortedEnemies = [...targetEnemies].sort((a, b) => getBasePower(b) - getBasePower(a));
 
       sortedEnemies.forEach(enemy => {
         const enemyBase = getBasePower(enemy);
+        const enemyC1 = enemy.chars[0] ? `${enemy.chars[0].element}` : '-';
+        const enemyC1Power = enemy.chars[0] ? formatPower(enemy.chars[0].power) : '-';
         const enemyCharsStr = enemy.chars.map(c => `${c.element}${formatPower(c.power)}`).join('+');
         const enemyDesc = `${enemy.name} ${formatPower(enemy.mainPower)} (${enemyCharsStr})`;
 
         if (availableMy.length === 0) {
-          output += ` ${enemyDesc}→担当なし\n`;
+          // テーブル用
+          matchOutputHtml += `
+            <tr>
+              <td style="border-right:1px solid #f1f5f9;"><strong>${enemy.name}</strong></td>
+              <td>${formatPower(enemy.mainPower)}</td>
+              <td>${enemyC1}</td>
+              <td style="border-right:2px solid #e2e8f0;">${enemyC1Power}</td>
+              <td colspan="4" style="color:#ef4444; font-weight:bold;">担当なし</td>
+            </tr>
+          `;
+          // テキスト用
+          noticeText += ` ${enemyDesc}→担当なし\n`;
           return;
         }
 
@@ -1081,7 +1199,23 @@
 
         if (directMatchIdx !== -1) {
           const matchedMy = availableMy.splice(directMatchIdx, 1)[0];
-          output += ` ${enemyDesc}→0% ${matchedMy.name}\n`;
+          
+          // テーブル追加
+          matchOutputHtml += `
+            <tr>
+              <td style="border-right:1px solid #f1f5f9;"><strong>${enemy.name}</strong></td>
+              <td>${formatPower(enemy.mainPower)}</td>
+              <td>${enemyC1}</td>
+              <td style="border-right:2px solid #e2e8f0;">${enemyC1Power}</td>
+              <td><strong>${matchedMy.name}</strong></td>
+              <td>${formatPower(matchedMy.mainPower)}</td>
+              <td>${matchedMy.chars[0] ? matchedMy.chars[0].element : '-'}</td>
+              <td>${matchedMy.chars[0] ? formatPower(matchedMy.chars[0].power) : '-'}</td>
+            </tr>
+          `;
+          // テキスト追加
+          noticeText += ` ${enemyDesc}→0% ${matchedMy.name}\n`;
+
         } else {
           availableMy.sort((a, b) => getEffectivePower(b, enemy) - getEffectivePower(a, enemy));
           const mainUnit = availableMy.shift();
@@ -1090,37 +1224,54 @@
           const gap = enemyBase - mainEff;
           const fatiguePerAttack = enemyBase * 0.0125;
           const neededChipsCount = Math.max(1, Math.ceil(gap / fatiguePerAttack));
-          
           const totalFatigue = Math.ceil(neededChipsCount * 1.25);
 
-          output += ` ${enemyDesc}→${totalFatigue}% ${mainUnit.name}\n`;
+          // テーブル追加
+          matchOutputHtml += `
+            <tr>
+              <td style="border-right:1px solid #f1f5f9;"><strong>${enemy.name}</strong></td>
+              <td>${formatPower(enemy.mainPower)}</td>
+              <td>${enemyC1}</td>
+              <td style="border-right:2px solid #e2e8f0;">${enemyC1Power}</td>
+              <td><strong>${mainUnit.name}</strong></td>
+              <td>${formatPower(mainUnit.mainPower)}</td>
+              <td>${mainUnit.chars[0] ? mainUnit.chars[0].element : '-'}</td>
+              <td>${mainUnit.chars[0] ? formatPower(mainUnit.chars[0].power) : '-'}</td>
+            </tr>
+          `;
+          // テキスト追加
+          noticeText += ` ${enemyDesc}→${totalFatigue}% ${mainUnit.name}\n`;
         }
       });
 
-      output += `\n`;
+      matchOutputHtml += `</tbody></table></div>`;
+      noticeText += `\n`;
     });
 
-    if (output.trim() === "") {
-      output = "選択された対戦ギルドにメンバーが登録されていません。";
+    if (!matchOutputHtml) {
+      matchOutputHtml = '<div style="font-size:12px; color:#64748b;">対戦対象の部隊がありません。</div>';
     }
 
-    document.getElementById('noticeOutput').value = output.trim();
+    document.getElementById('matchOutputContainer').innerHTML = matchOutputHtml;
+    document.getElementById('noticeOutput').value = noticeText.trim() || "割り振り結果がありません。";
+    document.getElementById('excludedOutput').value = excludedListText.trim() || "該当する要注意部隊（除外部隊）はありません。";
   }
 
-  function copyOutputText() {
-    const outputBox = document.getElementById('noticeOutput');
+  // 汎用テキストコピー機能
+  function copyText(elementId, labelName) {
+    const outputBox = document.getElementById(elementId);
     const text = outputBox.value.trim();
 
-    if (!text) {
-      return alert('コピーする分析結果がありません。まずは分析を実行してください。');
+    if (!text || text.includes("ありません")) {
+      return alert(`コピーする${labelName}データがありません。`);
     }
 
     navigator.clipboard.writeText(text).then(() => {
-      alert('分析結果をクリップボードにコピーしました！');
+      alert(`${labelName}をクリップボードにコピーしました！`);
     }).catch(err => {
       outputBox.select();
       document.execCommand('copy');
-      alert('分析結果をコピーしました！');
+      alert(`${labelName}をコピーしました！`);
     });
   }
 
